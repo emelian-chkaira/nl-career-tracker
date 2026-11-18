@@ -1,0 +1,13 @@
+# runtime data (never commit: crawled content, personal profile/pipeline)
+backend/.env.local
+backend/data/
+data/
+frontend/node_modules/
+frontend/dist/
+.env
+# python / tooling
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+backend/.env.local
