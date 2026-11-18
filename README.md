@@ -199,8 +199,8 @@ Everything is an environment variable — see [.env.example](.env.example) and `
 ## 🚧 Status
 
 Built and tested locally. Be aware of what is **prepared but not yet exercised in production**:
-- Firebase sign-in is implemented and covered by tests against a fake Firebase; it has not yet been connected to a live Firebase project.
-- The production Docker image and Oracle guide are written; the first public deployment is still to do.
+- Firebase e-mail/password sign-up, sign-in and password reset have been run against a live Firebase project; the Google button still needs its OAuth client ID configured and tested.
+- The production Docker image builds and the full production stack (Caddy HTTPS, API, worker, Postgres) was smoke-tested locally; the first public deployment (Oracle) is still to do.
 - AI CV tailoring is covered by mocked tests only.
 
 ## 📚 More
