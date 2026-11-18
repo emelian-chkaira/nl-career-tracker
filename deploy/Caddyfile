@@ -1,0 +1,6 @@
+# Automatic HTTPS (Let's Encrypt) for $DOMAIN, proxied to the API container.
+{$DOMAIN} {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy api:8787
+}
