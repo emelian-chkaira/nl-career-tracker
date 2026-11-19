@@ -11,6 +11,7 @@ from app.services import task_service, alert_service, sponsor_service
 from . import tasks, embeddings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+for _n in ("httpx", "httpcore", "playwright"): logging.getLogger(_n).setLevel(logging.WARNING)      # one INFO line per fetched page (incl. harmless 301/302 redirects) drowns the real worker logs
 log = logging.getLogger("worker")
 STOP = False
 HANDLERS = {
