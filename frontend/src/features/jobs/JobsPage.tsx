@@ -76,7 +76,7 @@ export function JobsPage({ internships = false }: { internships?: boolean }) {
       {k && <div className="stats"><div><b>{k.open_jobs.toLocaleString()}</b><span>open roles</span></div><div><b>{k.hiring_companies.toLocaleString()}</b><span>hiring companies</span></div><div><b>{k.internships.toLocaleString()}</b><span>internships</span></div><div><b>{k.new_7d.toLocaleString()}</b><span>new this week</span></div></div>}
     </section>
     <div className="row small muted" style={{ marginTop: 14 }}><strong style={{ color: "var(--text)" }}>{data ? `${data.total.toLocaleString()} results` : ""}</strong>{isFetching && <span>updating…</span>}
-      <button className="btn ghost small" onClick={runLive} disabled={!q.trim()}>⟳ Re-read employers live</button><span>{live}</span>{user && <span className="right"><SaveSearchButton params={params} /></span>}</div>
+      <button className="btn ghost small" onClick={runLive} disabled={!q.trim()} title={q.trim() ? "Read the career pages of employers related to your search, right now" : "Type a search first (e.g. flutter or data engineer): it re-reads the employers related to it"}>⟳ Re-read employers live</button>{!q.trim() && <span className="small muted">type a search to enable</span>}<span>{live}</span>{user && <span className="right"><SaveSearchButton params={params} /></span>}</div>
     <div className={"layout" + (wide ? "" : " noDetail")}>
       <Filters params={params} facets={data?.facets} onChange={(p) => update(p)} />
       <div className="card list">
