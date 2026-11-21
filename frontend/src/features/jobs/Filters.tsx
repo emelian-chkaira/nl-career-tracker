@@ -11,6 +11,7 @@ const toggle = (arr: string[] | undefined, v: string) => { const a = arr ?? []; 
 export function Filters({ params, facets, onChange }: { params: SearchParams; facets?: Record<string, Facet[]>; onChange(p: Partial<SearchParams>): void }) {
   return (<div className="card">
     <Group title="Type" facets={facets?.job_type} selected={params.job_type ?? []} onToggle={(v) => onChange({ job_type: toggle(params.job_type, v) })} fmt={label} />
+    <Group title="Domain" facets={facets?.domain} selected={params.domain ?? []} onToggle={(v) => onChange({ domain: toggle(params.domain, v) })} fmt={label} />
     <Group title="City" facets={facets?.city} selected={params.city ?? []} onToggle={(v) => onChange({ city: toggle(params.city, v) })} />
     <Group title="Language" facets={facets?.language} selected={params.language ?? []} onToggle={(v) => onChange({ language: toggle(params.language, v) })} fmt={label} />
     <Group title="Skills" facets={facets?.skills} selected={params.skills ?? []} onToggle={(v) => onChange({ skills: toggle(params.skills, v) })} />

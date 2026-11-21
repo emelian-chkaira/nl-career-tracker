@@ -7,7 +7,7 @@ DB = "careers_test"
 with psycopg.connect(ADMIN, autocommit=True) as c:
     c.execute(f"DROP DATABASE IF EXISTS {DB} WITH (FORCE)"); c.execute(f"CREATE DATABASE {DB}")
 os.environ["DATABASE_URL"] = f"postgresql+psycopg://careers:careers@localhost:5433/{DB}"
-os.environ.update(CAREERS_DATA_DIR=os.path.join(os.path.dirname(__file__), ".tmp-data"), CAREERS_ADMIN_EMAILS="admin@example.com", CAREERS_RATE_LIMIT_PER_MIN="0", CAREERS_AUTH_RATE_LIMIT_PER_MIN="0")
+os.environ.update(CAREERS_DATA_DIR=os.path.join(os.path.dirname(__file__), ".tmp-data"), CAREERS_ADMIN_EMAILS="admin@example.com", CAREERS_FIRST_USER_ADMIN="0", CAREERS_RATE_LIMIT_PER_MIN="0", CAREERS_AUTH_RATE_LIMIT_PER_MIN="0")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
@@ -32,7 +32,7 @@ def clean(request):
     yield
     if "keep_data" in request.keywords: return
     with engine.begin() as c:
-        c.execute(text("TRUNCATE auth_tokens, notifications, email_outbox, saved_searches, user_jobs, refresh_tokens, users, job_skills, jobs, companies, tasks RESTART IDENTITY CASCADE"))
+        c.execute(text("TRUNCATE mail_events, mail_accounts, user_ai_settings, auth_tokens, notifications, email_outbox, saved_searches, user_jobs, refresh_tokens, users, job_skills, jobs, companies, tasks RESTART IDENTITY CASCADE"))
     from app.core import ratelimit; ratelimit.reset()
 
 

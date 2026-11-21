@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from .config import settings
 
-engine = create_engine(settings.database_url, pool_size=settings.db_pool_size, max_overflow=10, pool_pre_ping=True, future=True)
+engine = create_engine(settings.database_url, pool_size=settings.db_pool_size, max_overflow=20, pool_pre_ping=True, future=True)
 
 
 @event.listens_for(engine, "connect")

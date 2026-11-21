@@ -5,10 +5,10 @@ from sqlalchemy import select, update, func, delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.crawler import discovery, nl, scoring, dates
+from app.crawler import discovery, nl, scoring, dates, domains
 from app.cvtools import cv as cvmod
 from app.models import Company, Job, JobSkill
-from app.services import sponsor_service
+from app.services import sponsor_service, policy_service
 
 NOT_JOB_URL = re.compile(r"/(news|nieuws|press|blog|articles?|media|insights|stories|events|podcast|perspectives|whitepapers?)(/|$)|#\d+$", re.I)
 NOT_JOB_TITLE = re.compile(r"\b(receives|announces|announced|approval|press release|partners with|wins|launches|appoints|acquires|acquisition of)\b", re.I)
@@ -58,11 +58,16 @@ def store_jobs(db: Session, company: Company, jobs: list[dict], source="company-
         seen.add(url)
         if not nl.is_nl(j.get("location"), url, source): continue
         desc = j.get("description") or ""
+        sk = skills_of(title, desc)
+        domain = domains.classify(title, desc, sk)
+        pol = policy_service.current(); keep = pol["keep_domains"]
+        if keep and domain not in keep: continue                            # storage policy: only the domains the operator asked for
         lang = scoring.language(title, desc)
         jt = "internship" if j.get("kind") == "internship" and scoring.job_type(title, j.get("location", "")) in ("job", "junior") else scoring.job_type(title, j.get("location", ""))
         lo, hi, per = money(desc)
         posted = dates.norm_date(j.get("posted_at"))
         posted = dt.date.fromisoformat(posted) if posted else None
+        if pol["max_job_age_days"] and posted and (dt.date.today() - posted).days > pol["max_job_age_days"]: continue   # storage policy: no old postings
         loc = j.get("location") or ""
         dk = dedupe_key(company.id, title, loc)
         ex = db.scalar(select(Job).where(Job.url == url))
@@ -72,10 +77,10 @@ def store_jobs(db: Session, company: Company, jobs: list[dict], source="company-
             continue
         if db.scalar(select(Job.id).where(Job.dedupe_key == dk, Job.status == "open")):
             continue                                                        # same posting under another URL
-        job = Job(company_id=company.id, title=title, location=loc, city=city_of(loc), url=url, source=source, description=desc, category=nl.category(title),
+        job = Job(company_id=company.id, title=title, location=loc, city=city_of(loc), url=url, source=source, description=desc, category=nl.category(title), domain=domain,
                   job_type=jt, language=lang, remote=bool(re.search(r"\bremote\b|\bhybrid\b", loc, re.I)), salary_min=lo, salary_max=hi, salary_period=per,
                   posted_at=posted, dedupe_key=dk)
-        job.skills = [JobSkill(skill=s) for s in skills_of(title, desc)]
+        job.skills = [JobSkill(skill=s) for s in sk]
         db.add(job); new += 1
     if seen and expire:
         db.execute(update(Job).where(Job.company_id == company.id, Job.status == "open", Job.url.notin_(seen)).values(status="expired"))

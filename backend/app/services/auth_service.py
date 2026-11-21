@@ -8,11 +8,18 @@ from app.models import User, RefreshToken
 from app.crawler.scoring import DEFAULT_PROFILE
 
 
+def role_for(db: Session, email: str) -> str:
+    """admin if listed in CAREERS_ADMIN_EMAILS, or if this is a fresh install without any admin yet (CAREERS_FIRST_USER_ADMIN)."""
+    if email in settings.admin_list: return "admin"
+    if settings.first_user_admin and not db.scalar(select(User.id).where(User.role == "admin").limit(1)): return "admin"
+    return "user"
+
+
 def register(db: Session, email: str, password: str, name: str = "") -> User:
     if not settings.allow_registration: raise HTTPException(403, "registration is closed")
     email = email.strip().lower()
     if db.scalar(select(User).where(User.email == email)): raise HTTPException(409, "an account with this email already exists")
-    role = "admin" if email in settings.admin_list else "user"
+    role = role_for(db, email)
     u = User(email=email, password_hash=security.hash_password(password), name=name.strip(), role=role, profile=dict(DEFAULT_PROFILE))
     db.add(u); db.commit(); return u
 

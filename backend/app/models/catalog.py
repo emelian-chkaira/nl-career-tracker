@@ -49,6 +49,7 @@ class Job(Base):
     source: Mapped[str | None] = mapped_column(String(40), default="company-site")
     description: Mapped[str | None] = mapped_column(Text)
     category: Mapped[str] = mapped_column(String(16), default="other", index=True)   # tech | other
+    domain: Mapped[str | None] = mapped_column(String(16), index=True)               # mobile | backend | frontend | data | devops … (see crawler/domains.py)
     job_type: Mapped[str] = mapped_column(String(16), default="job", index=True)     # internship | traineeship | junior | job | senior
     language: Mapped[str] = mapped_column(String(20), default="english_ok")
     remote: Mapped[bool] = mapped_column(Boolean, default=False)

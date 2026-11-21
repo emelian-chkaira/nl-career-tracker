@@ -10,7 +10,7 @@ interface Overview {
   companies: { name: string; jobs: number }[]; skills: { name: string; jobs: number; last_30d: number; prev_30d: number; trend: number | null }[];
   salary: { name: string; n: number; avg: number; median: number }[];
 }
-const COLORS = ["#2f5bea", "#12a27a", "#e08a1e", "#c2410c", "#7c3aed", "#0891b2", "#be185d"];
+const COLORS = ["#1f7a6d", "#e0a030", "#b8503a", "#5b6fa8", "#7a9a3b", "#8a5a7a", "#6b7280"];
 const Kpi = ({ v, t, s }: { v: string | number; t: string; s?: string }) => <div className="card kpi"><div className="muted small">{t}</div><div className="v">{typeof v === "number" ? v.toLocaleString() : v}</div>{s && <div className="small muted">{s}</div>}</div>;
 
 export function DashboardPage() {
@@ -32,7 +32,7 @@ export function DashboardPage() {
     </div>
     <div className="card"><h2>New postings per day</h2><ResponsiveContainer width="100%" height={220}><AreaChart data={d.daily}><CartesianGrid stroke="var(--line)" vertical={false} />
       <XAxis dataKey="day" tick={tick} tickFormatter={(v) => v.slice(5)} minTickGap={30} /><YAxis tick={tick} width={34} /><Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--line)" }} />
-      <Area dataKey="new_jobs" name="New jobs" stroke="#2f5bea" fill="#2f5bea33" /></AreaChart></ResponsiveContainer></div>
+      <Area dataKey="new_jobs" name="New jobs" stroke="#1f7a6d" fill="#1f7a6d33" /></AreaChart></ResponsiveContainer></div>
     <div className="grid two">
       <Bars title="Top cities" data={d.cities} /><Bars title="Top hiring companies" data={d.companies} />
       <div className="card"><h2>Contract type</h2><ResponsiveContainer width="100%" height={220}><PieChart><Pie data={d.types.map((t) => ({ ...t, name: label(t.name) }))} dataKey="jobs" nameKey="name" outerRadius={80} label>
@@ -46,5 +46,5 @@ export function DashboardPage() {
 function Bars({ title, data }: { title: string; data: { name: string; jobs: number }[] }) {
   return <div className="card"><h2>{title}</h2><ResponsiveContainer width="100%" height={Math.max(180, data.slice(0, 10).length * 26)}>
     <BarChart data={data.slice(0, 10)} layout="vertical" margin={{ left: 20 }}><XAxis type="number" hide /><YAxis type="category" dataKey="name" width={120} tick={{ fill: "var(--muted)", fontSize: 12 }} />
-      <Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--line)" }} cursor={{ fill: "var(--chip)" }} /><Bar dataKey="jobs" fill="#2f5bea" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer></div>;
+      <Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--line)" }} cursor={{ fill: "var(--chip)" }} /><Bar dataKey="jobs" fill="#1f7a6d" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer></div>;
 }

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     # --- infrastructure
     database_url: str = Field("postgresql+psycopg://careers:careers@localhost:5433/careers", validation_alias=AliasChoices("DATABASE_URL", "CAREERS_DATABASE_URL"))
-    db_pool_size: int = 10
+    db_pool_size: int = 30
     data_dir: str = "./data"                      # logos, uploads
     env: str = "dev"                              # dev | prod
     # --- security
@@ -22,9 +22,19 @@ class Settings(BaseSettings):
     allow_registration: bool = True
     firebase_api_key: str | None = None            # Firebase project Web API key: when set, Firebase Authentication is the identity provider
     google_client_id: str | None = None           # OAuth client ID(s) from Google Cloud Console, comma separated (web, iOS, Android)
+    google_client_secret: str | None = None       # secret of the web OAuth client: enables "Connect Gmail" (see docs/GMAIL_OAUTH.md)
+    gmail_client_id: str | None = None            # optional: a separate OAuth client for Gmail; defaults to the first google_client_id
+    api_url: str = "http://localhost:8787"        # public address of this API, used for the Google OAuth redirect
     require_verified_email: bool = False          # true: sign-in is refused until the address is confirmed
     verify_ttl_hours: int = 48
     reset_ttl_min: int = 60
+    # --- what to store (apply on ingest, and via the Prune action to existing data) ---
+    keep_domains: str = ""                        # comma list of: mobile, frontend, backend, fullstack, software, data, devops, security, qa, embedded, design, product, other. Empty = store every domain
+    max_job_age_days: int = 0                     # 0 = no limit. Otherwise skip jobs posted longer ago than this, and delete stored ones that got older
+    delete_expired_after_days: int = 60           # jobs no longer on the employer's page are deleted after this many days (0 = keep forever). Saved/pipeline jobs are never deleted
+    allow_private_hosts: bool = True              # True: users may point AI/mail connections at localhost / LAN (Ollama, local mail bridge). Set False on a public server (SSRF protection)
+    open_crawler: bool = True                     # True: any signed-in user can use the Crawler page (self-hosted default). False: admins only (set this for a public deployment)
+    first_user_admin: bool = True                 # the first account created on a fresh install becomes admin (so a self-hosted copy needs no setup)
     admin_emails: str = ""                        # comma separated: these accounts get the admin role on sign-up
     cookie_secure: bool = False
     trust_proxy: bool = False
@@ -59,6 +69,10 @@ class Settings(BaseSettings):
     def cors_list(self) -> list[str]: return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
     @property
     def admin_list(self) -> set[str]: return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()}
+    @property
+    def domain_set(self) -> set[str]:
+        from app.crawler.domains import parse
+        return parse(self.keep_domains)
 
 
 @lru_cache

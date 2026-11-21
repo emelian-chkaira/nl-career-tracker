@@ -18,3 +18,4 @@ fastembed>=0.4         # semantic search embeddings (optional: set CAREERS_SEMAN
 playwright>=1.45       # JS-rendered career pages (run `playwright install chromium`)
 pypdf>=4               # CV extraction from PDF
 pdfminer.six>=20231228 # layout-aware PDF reading (CV import)
+cryptography>=42

@@ -30,6 +30,7 @@ class SearchParams(BaseModel):
     category: str | None = "tech"                   # tech | other | None(all)
     kind: Literal["job", "internship"] | None = None
     job_type: list[str] = []                        # internship | traineeship | junior | job | senior
+    domain: list[str] = []                          # mobile | backend | frontend | fullstack | software | data | devops | security | qa | embedded | design | product | other
     language: list[str] = []                        # english_ok | dutch_plus | dutch_required
     city: list[str] = []
     location: str | None = None
@@ -67,6 +68,7 @@ def _filters(p: SearchParams) -> tuple[str, dict]:
     if p.kind == "internship": w.append("j.job_type IN ('internship','traineeship')")
     elif p.kind == "job": w.append("j.job_type NOT IN ('internship','traineeship')")
     if p.job_type: w.append("j.job_type = ANY(:job_types)"); a["job_types"] = p.job_type
+    if p.domain: w.append("j.domain = ANY(:domains)"); a["domains"] = p.domain
     if p.language: w.append("j.language = ANY(:langs)"); a["langs"] = p.language
     if p.city: w.append("lower(j.city) = ANY(:cities)"); a["cities"] = [c.lower() for c in p.city]
     if p.location: w.append("j.location ILIKE :loc"); a["loc"] = f"%{p.location}%"
@@ -194,11 +196,11 @@ def run(db: Session, p: SearchParams) -> dict:
 
 
 def facets(db: Session, ids: list[int]) -> dict:
-    if not ids: return {k: [] for k in ("category", "job_type", "city", "language", "skills", "companies", "sponsor", "remote")}
+    if not ids: return {k: [] for k in ("category", "job_type", "domain", "city", "language", "skills", "companies", "sponsor", "remote")}
     a = {"ids": ids[:5000]}
     g = lambda col: [dict(value=r[0], count=r[1]) for r in db.execute(text(f"SELECT {col}, count(*) n FROM jobs j WHERE j.id = ANY(:ids) AND {col} IS NOT NULL GROUP BY {col} ORDER BY n DESC LIMIT 15"), a).all()]
     return {
-        "category": g("j.category"), "job_type": g("j.job_type"), "city": g("j.city"), "language": g("j.language"),
+        "category": g("j.category"), "job_type": g("j.job_type"), "domain": g("j.domain"), "city": g("j.city"), "language": g("j.language"),
         "skills": [dict(value=r[0], count=r[1]) for r in db.execute(text("SELECT s.skill, count(*) n FROM job_skills s WHERE s.job_id = ANY(:ids) GROUP BY s.skill ORDER BY n DESC LIMIT 20"), a).all()],
         "companies": [dict(id=r[0], value=r[1], count=r[2]) for r in db.execute(text("SELECT c.id, c.name, count(*) n FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.id = ANY(:ids) GROUP BY c.id, c.name ORDER BY n DESC LIMIT 10"), a).all()],
         "sponsor": db.execute(text("SELECT count(*) FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.id = ANY(:ids) AND c.sponsor_status IN ('recognised','possible')"), a).scalar(),

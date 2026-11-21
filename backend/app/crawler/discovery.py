@@ -386,8 +386,9 @@ def _scan_company(c: dict):
     if res["ats"] in ADAPTERS and res["ats_slug"]:
         jobs = ADAPTERS[res["ats"]](res["ats_slug"])
         if jobs: res.update(jobs=jobs, note=f"{res['ats']} API"); return res   # empty board: keep looking (stale boards are common)
-    # 2. slug-guess every ATS API
-    b = find_board(c["name"])
+    # 2. slug-guess every ATS API - only for companies with no saved career page / board yet. Re-guessing on every scan is what produced
+    #    hundreds of 404/301 requests per run; a saved careers_url or ats_slug is reused instead (step 3 still re-detects a changed ATS).
+    b = None if (res["careers_url"] or res["ats_slug"]) else find_board(c["name"])
     if b and b[2]:
         res.update(ats=b[0], ats_slug=b[1], jobs=b[2], resolved_via="ats-probe", note=f"{b[0]} API"); return res
     # 3. website -> careers page

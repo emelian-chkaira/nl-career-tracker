@@ -20,6 +20,7 @@ class JobOut(BaseModel):
     url: str
     job_type: str
     category: str
+    domain: str | None = None
     language: str
     remote: bool = False
     salary: dict | None = None            # {min,max,period,verdict}

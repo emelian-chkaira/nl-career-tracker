@@ -1,6 +1,7 @@
 """Sign in with Google: verifies the ID token the client got from Google (signature via Google's public keys, audience, issuer, expiry)."""
 import secrets
 import jwt
+from app.services import auth_service
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -32,6 +33,6 @@ def sign_in(db: Session, credential: str) -> User:
     else:
         if not settings.allow_registration: raise HTTPException(403, "registration is closed")
         u = User(email=email, name=(c.get("name") or "")[:120], password_hash=security.hash_password(secrets.token_urlsafe(32)),   # unusable random password; "forgot password" can set one
-                 role="admin" if email in settings.admin_list else "user", profile=dict(DEFAULT_PROFILE), email_verified_at=now())
+                 role=auth_service.role_for(db, email), profile=dict(DEFAULT_PROFILE), email_verified_at=now())
         db.add(u)
     u.last_login_at = now(); db.commit(); return u

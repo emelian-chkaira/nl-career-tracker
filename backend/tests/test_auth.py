@@ -20,10 +20,20 @@ def test_admin_email_gets_admin_role(client, make_user):
     assert client.get("/api/v1/admin/stats", headers=h).status_code == 200
 
 
-def test_admin_endpoints_forbidden_for_users_and_anonymous(client, make_user):
+def test_crawler_is_open_to_signed_in_users_by_default(client, make_user):
+    h, _ = make_user()
+    assert client.get("/api/v1/admin/stats", headers=h).status_code == 200
+    assert client.get("/api/v1/admin/worker", headers=h).status_code == 200
+    assert client.post("/api/v1/admin/tasks", json={"kind": "embed"}, headers=h).status_code == 202
+    assert client.get("/api/v1/admin/stats").status_code == 401                       # still needs a sign-in
+    assert client.get("/api/v1/admin/users", headers=h).status_code == 403            # other people's accounts stay admin-only
+
+
+def test_crawler_can_be_locked_to_admins(client, make_user, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "open_crawler", False)
     h, _ = make_user()
     assert client.get("/api/v1/admin/stats", headers=h).status_code == 403
-    assert client.get("/api/v1/admin/stats").status_code == 401
     assert client.post("/api/v1/admin/tasks", json={"kind": "scan_all"}, headers=h).status_code == 403
 
 

@@ -47,7 +47,7 @@ The first build takes several minutes (Chromium and the embedding model). Caddy 
 (needs DNS to point at the VM and ports 80/443 open).
 
 ## 7. First run
-1. Open `https://<your-domain>`, sign up with the e-mail from `CAREERS_ADMIN_EMAILS` -> the **Admin** page appears.
+1. Open `https://<your-domain>`, sign up with the e-mail from `CAREERS_ADMIN_EMAILS` -> the **Crawler** page (with user management) appears.
 2. Run the tasks *sponsors*, *discover*, *scan_all* (the worker does the crawling in the background).
 3. Firebase: add the domain under *Authorized domains* and the OAuth web client's JavaScript origins, set the e-mail template action URL to `https://<domain>/action` (see [FIREBASE.md](FIREBASE.md)).
 4. Mobile: build the app with `--dart-define=API_URL=https://<your-domain>`.

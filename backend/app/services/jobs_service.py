@@ -27,7 +27,7 @@ def to_out(j: Job, user: User | None = None, stages: dict | None = None, relevan
         fit, why = scoring.fit(j.title, j.description or "", j.location or "", j.job_type, j.language, p)
     c = j.company
     return JobOut(id=j.id, title=j.title, company=CompanyMini(id=c.id, name=c.name, logo=logo_url(c.logo), website=c.website, sponsor_status=c.sponsor_status, sponsor_match=c.sponsor_match),
-                  location=j.location, city=j.city, url=j.url, job_type=j.job_type, category=j.category, language=j.language, remote=j.remote, salary=_salary(j, p),
+                  location=j.location, city=j.city, url=j.url, job_type=j.job_type, category=j.category, domain=j.domain, language=j.language, remote=j.remote, salary=_salary(j, p),
                   posted_at=j.posted_at, first_seen=j.first_seen, status=j.status, skills=[s.skill for s in j.skills][:8], snippet=snippet if snippet is not None else (j.description or "")[:240],
                   relevance=relevance, matched=matched or [], fit=fit, fit_reason=why, stage=(stages or {}).get(j.id), description=(j.description if full else None))
 

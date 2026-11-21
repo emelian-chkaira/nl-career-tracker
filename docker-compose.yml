@@ -13,8 +13,8 @@ services:
     restart: unless-stopped
   api:
     build: .
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8787 --proxy-headers"
-    env_file: [.env]
+    command: sh -c "alembic upgrade head && python -m app.cli seed && uvicorn app.main:app --host 0.0.0.0 --port 8787 --proxy-headers"
+    env_file: [{ path: .env, required: false }]
     environment: { DATABASE_URL: "postgresql+psycopg://careers:${POSTGRES_PASSWORD:-careers}@db:5432/careers" }
     ports: ["8787:8787"]
     depends_on: { db: { condition: service_healthy } }
@@ -23,7 +23,7 @@ services:
   worker:
     build: .
     command: python -m app.workers.run
-    env_file: [.env]
+    env_file: [{ path: .env, required: false }]
     environment: { DATABASE_URL: "postgresql+psycopg://careers:${POSTGRES_PASSWORD:-careers}@db:5432/careers" }
     depends_on: { db: { condition: service_healthy } }
     volumes: ["careers-data:/data"]

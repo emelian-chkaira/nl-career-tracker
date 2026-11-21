@@ -1,4 +1,5 @@
-export const label = (s: string) => s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+const SPECIAL: Record<string, string> = { devops: "DevOps", qa: "QA", ai_ml: "AI / ML", data: "Data", ml: "ML", ui_ux: "UI / UX" };
+export const label = (s: string) => SPECIAL[s] ?? s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 export function ago(d?: string | null): string {
   if (!d) return "";
   const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);

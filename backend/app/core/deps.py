@@ -27,6 +27,13 @@ def admin_user(u: User = Depends(current_user)) -> User:
     return u
 
 
+def operator_user(u: User = Depends(current_user)) -> User:
+    """Crawler controls: any signed-in user when CAREERS_OPEN_CRAWLER is on (the default for self-hosting), otherwise admins only."""
+    from .config import settings
+    if not settings.open_crawler and u.role != "admin": raise HTTPException(403, "admin only")
+    return u
+
+
 def client_ip(request: Request) -> str:
     from .config import settings
     if settings.trust_proxy and (f := request.headers.get("x-forwarded-for")): return f.split(",")[0].strip()

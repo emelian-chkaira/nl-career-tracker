@@ -16,7 +16,7 @@ PW_SLOTS = threading.Semaphore(settings.browser_slots)
 
 def _scan_one(cid: int) -> int:
     with SessionLocal() as db:
-        with PW_SLOTS: return ing.scan_company(db, cid)
+        return ing.scan_company(db, cid)     # headless-browser concurrency is already capped inside discovery.render_scan
 
 
 def scan_ids(t: Task, db, ids: list[int]):
@@ -191,3 +191,28 @@ def internships(t, db):
             with SessionLocal() as d3: task_service.progress(d3, d3.get(Task, t.id), **state)
     with ThreadPoolExecutor(10) as ex: list(ex.map(one, ids))
     task_service.progress(db, t, **state)
+
+
+def mail_sync(t: Task, db):
+    """Read one connected mailbox (read-only), classify the job e-mails and store the extracted facts. Runs with the owner's AI settings."""
+    import uuid
+    from app.core.secretbox import unseal
+    from app.models import MailAccount, User, UserAiSettings
+    from app.services import llm_service, mail_classifier
+    p = t.payload or {}; uid = uuid.UUID(p["user_id"]); acc = db.get(MailAccount, p["account_id"])
+    if not acc or acc.user_id != uid: raise RuntimeError("mailbox not found")
+    s = db.get(UserAiSettings, uid); cfg = llm_service.Cfg(s.provider, s.model, s.base_url, unseal(s.api_key_enc)) if s else llm_service.Cfg()
+    try:
+        task_service.progress(db, t, phase="reading mailbox")
+        days = int(p.get("days") or acc.days_back)
+        from app.services import gmail_service
+        mails = gmail_service.fetch(unseal(acc.secret_enc) or "", days=days)
+        task_service.progress(db, t, phase="analysing", total=len(mails))
+        stats = mail_classifier.process(db, uid, cfg, mails, account_id=acc.id, progress=lambda **k: task_service.progress(db, t, **k))
+        import datetime as _dt
+        acc.last_sync_at, acc.last_error = _dt.datetime.now(_dt.timezone.utc), None; db.commit()
+        task_service.progress(db, t, phase="done", **stats)
+    except Exception as e:
+        db.rollback(); acc = db.get(MailAccount, p["account_id"])
+        if acc: acc.last_error = str(e)[:300]; db.commit()
+        raise

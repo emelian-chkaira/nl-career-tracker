@@ -5,6 +5,7 @@ access + refresh tokens and keeps a local user row (profile, saved jobs) linked 
 Firebase was switched on are migrated lazily on their next successful sign-in."""
 import logging, secrets
 import httpx
+from app.services import auth_service
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -47,7 +48,7 @@ def _link(db: Session, email: str, uid: str, name: str = "", verified: bool = Fa
     if not u:
         if not settings.allow_registration: raise HTTPException(403, "registration is closed")
         u = User(email=email, name=name.strip()[:120], password_hash=security.hash_password(secrets.token_urlsafe(32)),    # real credentials live in Firebase
-                 role="admin" if email in settings.admin_list else "user", profile=dict(DEFAULT_PROFILE), is_active=True); db.add(u)
+                 role=auth_service.role_for(db, email), profile=dict(DEFAULT_PROFILE), is_active=True); db.add(u)
     if not u.is_active: raise HTTPException(401, "account disabled")
     u.firebase_uid = uid
     if verified: u.email_verified_at = u.email_verified_at or now(); u.firebase_refresh = None

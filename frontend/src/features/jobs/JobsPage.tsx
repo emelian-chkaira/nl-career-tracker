@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import type { SearchParams } from "@/shared/api/types";
@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/shared/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 
-const ARR = ["job_type", "language", "city", "skills"] as const;
+const ARR = ["job_type", "domain", "language", "city", "skills"] as const;
 function fromUrl(search: string, internships: boolean): SearchParams {
   const raw = parseQs(search); const p: Record<string, unknown> = { ...raw };
   for (const k of ARR) p[k] = raw[k] === undefined ? [] : ([] as string[]).concat(raw[k]);
@@ -30,6 +30,7 @@ function useWide() {
 }
 const QUICK = ["python", "react", "flutter", "data engineer", "devops", "machine learning", "backend", "intern"];
 
+const greeting = (name?: string | null) => { const h = new Date().getHours(), who = name ? `, ${name.split(" ")[0]}` : ""; return `${h < 5 ? "Burning the midnight oil" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"}${who}`; };
 export function JobsPage({ internships = false }: { internships?: boolean }) {
   const [sp, setSp] = useSearchParams();
   const params = useMemo(() => fromUrl(sp.toString(), internships), [sp, internships]);
@@ -63,8 +64,10 @@ export function JobsPage({ internships = false }: { internships?: boolean }) {
   const pages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
   return (<div>
     <section className="hero">
-      <h1>{internships ? "Find your internship in the Netherlands" : "Tech jobs in the Netherlands, straight from the source"}</h1>
-      <p>Every posting is read from the employer's own career page — no aggregators, no duplicates. IND sponsor status is shown as a flag.</p>
+      <div className="hero-seg"><Link to="/" className={internships ? "" : "on"}>Jobs</Link><Link to="/internships" className={internships ? "on" : ""}>Internships</Link></div>
+      <div className="greet">{greeting(user?.name)}</div>
+      <h1>{internships ? "Your first step into the Dutch tech scene" : "Find work you would actually want to do"}</h1>
+      <p>{internships ? "Internships and traineeships, collected from the companies' own career pages." : "Every role here comes straight from the employer's own careers page, so there are no middlemen and no duplicates. We also tell you which companies can sponsor a visa."}</p>
       <form className="searchbar" onSubmit={(e) => { e.preventDefault(); update({ q }); }}>
         <input type="search" list="sug" placeholder={'Job title, skill or company — try  flutter -senior  or  "data engineer"'} value={q} onChange={(e) => setQ(e.target.value)} />
         <datalist id="sug">{[...(sug.data?.skills ?? []), ...(sug.data?.titles ?? [])].slice(0, 8).map((s) => <option key={s} value={q.replace(/\S*$/, "") + s} />)}</datalist>
@@ -82,14 +85,14 @@ export function JobsPage({ internships = false }: { internships?: boolean }) {
       <div className="card list">
         {!data && !error && Array.from({ length: 6 }, (_, i) => <div key={i} className="job"><div className="skel logo" /><div className="grow stack" style={{ gap: 8 }}><div className="skel" style={{ height: 16, width: "70%" }} /><div className="skel" style={{ height: 12, width: "45%" }} /></div></div>)}
         {error && <div className="empty err">{(error as Error).message}</div>}
-        {data && !data.items.length && <div className="empty">No jobs match. Loosen the filters or re-read employers live.</div>}
+        {data && !data.items.length && <div className="empty">Nothing matches just yet. Try fewer filters, or ask us to re-read the employers live.</div>}
         {data?.items.map((j) => <JobCard key={j.id} job={j} selected={wide && open === j.id} onOpen={setOpen} />)}
         {data && pages > 1 && <div className="pager">
           <button className="btn ghost small" disabled={(params.page ?? 1) <= 1} onClick={() => update({ page: (params.page ?? 1) - 1 }, true)}>← Prev</button>
           <span className="muted small">Page {params.page ?? 1} of {pages}</span>
           <button className="btn ghost small" disabled={(params.page ?? 1) >= pages} onClick={() => update({ page: (params.page ?? 1) + 1 }, true)}>Next →</button></div>}
       </div>
-      {wide && <div className="card detail inline">{open != null ? <JobDetail id={open} /> : <div className="empty">Select a job to read it here.</div>}</div>}
+      {wide && <div className="card detail inline">{open != null ? <JobDetail id={open} /> : <div className="empty">Pick a job on the left and the details will show up here.</div>}</div>}
     </div>
     {!wide && open != null && <JobDrawer id={open} onClose={() => setOpen(null)} />}
   </div>);
